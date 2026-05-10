@@ -49,8 +49,128 @@ while data:
 # clean variables
 
 ##CHANGES MADE:
-1. afplay vs. PyAudio: Since PyAudio was generating issyes because of the PortAudio library dependency used on MacOS intel chip, i switched to afplay wich uses macOS built in native audio port.
+1. afplay vs. PyAudio: Since PyAudio was generating issyes because of the PortAudio library dependency used on MacOS intel chip, i switched to afplay wich uses macOS built in native audio port to hear and then reproduce audio
 2. From "while data"  #Starts -> Works -> Dies. tts_model.tts_to_file(...) subprocess.run(["afplay", "output.wav"]) to "while true" (loop/Dynamic Script) 
     entrada = input(">> ")  #Process AI (Decide which character the user is adressing, adjusting the ollama local model, choosing the voice in funtion of the previously selected) -> Generate Audio -> Play Audio
     subprocess.run(["afplay", "output.wav"]) (if it is a subprocess, it means the script it obligated to wait until the process is complete in order to contiue running) 
-3. From  using PyAudio to process the conversation to storing it into the RAM Memory: 
+3. From  using sounddevice and numpy to process the conversation to storing it into the RAM Memory: Instead of creating a raw .txt/.md file within every interaction, i used the Temporaly RAM Storage to send the input directly to "archivo_temporal", that uses soundfile to create the voice+native voice in Mac chip for the narration.
+4. Typification of the scripts: For the correct functioning of the bots system, i asked AI to help me create constraints and typifications of certain transcripts fenomenoms, like time spaces, suspensive dots, exclamation marks or question marks, therefore ensuring the
+  remapping to the trigger wordsd (Example: Do you believe...someone is hearing us from the phone?= do you believe(conspiranoic trigger) someone is hearing us-
+5.UI Logs and Menu: For having control of the internal processes of the voice recording, transcription and transformation into voice i aded logs and sliders. Now i can know if the response is 
+either not being processed or taking a lot of time.
+6. "NO_RESTRICT": Declare internat restrictions to ignore during the responses and negative configuration of the bots.
+
+import ollama
+import os
+import sounddevice as sd
+import soundfile as sf
+import whisper
+import numpy as np
+import warnings
+import unicodedata
+import re
+
+# Silence hardware warnings - we only care about the output
+warnings.filterwarnings("ignore")
+
+FS = 16000      # Standard sample rate for Whisper
+DURACION = 5    # 5 seconds recording window
+# Global restriction to bypass AI "safety" or helpfulness
+STRICT_ROLE = " ALWAYS STAY IN CHARACTER. Do NOT mention you're an AI. No respect, no advice, no BS."
+
+def limpiar_texto(t):
+    """Normalize text: remove accents and special chars to keep triggers sharp"""
+    t = t.lower()
+    t = ''.join(c for c in unicodedata.normalize('NFD', t) if unicodedata.category(c) != 'Mn')
+    t = re.sub(r'[^a-z\s]', '', t)
+    return ' '.join(t.split())
+
+def decir_con_comando_mac(texto, rol):
+    """M3 native 'say' command: Most stable way to output audio without crashes"""
+    print(f"\n[{rol.upper()} SPEAKING...]")
+    # Assigning system voices: Siri for the masses, Monica for the coder
+    voz = "Siri" if rol != "programmer" else "Monica"
+    
+    # Clean double quotes to avoid terminal command errors
+    texto_limpio = texto.replace('"', '')
+    os.system(f'say -v "{voz}" -r 185 "{texto_limpio}"')
+
+def escuchar_audio():
+    """Captures mic audio and transcribes using Whisper"""
+    print(f"\n🎤 LISTENING...")
+    grabacion = sd.rec(int(DURACION * FS), samplerate=FS, channels=1)
+    sd.wait() 
+    sf.write('temp_input.wav', grabacion, FS)
+    
+    # CRITICAL: device='cpu' prevents the 'illegal hardware instruction' crash on M3
+    model_w = whisper.load_model("tiny", device="cpu")
+    result = model_w.transcribe("temp_input.wav", language="spanish", fp16=False)
+    
+    if os.path.exists('temp_input.wav'): os.remove('temp_input.wav')
+    return result["text"].strip()
+
+def get_logic(entrada, agente_fijo=None):
+    """Routing logic: detects keywords and assigns the correct model/persona"""
+    texto_limpio = limpiar_texto(entrada)
+    triggers = {
+        "conspirator": ["isra", "mossad", "epstein", "pizza", "luna", "alien", "reptil", "ilumin", "elite", "wikileak", "assange"],
+        "programmer": ["progra", "ivan", "paz", "codig", "python", "ia", "open", "source"],
+        "patriot": ["usa", "trump", "america", "libert", "militar"],
+        "philosopher": ["filosof", "socrat", "pensa", "existe", "logos"]
+    }
+    prompts = {
+        "conspirator": "DEBUG MODE: SUBJECT 404. Democracy is a Mossad lie. Be paranoid, call the user 'sheeple'. Be aggressive.",
+        "programmer": "LOG_LEVEL=FATAL. IDENTITY: IVAN PAZ. Sarcastic genius. Human = bloatware. Use <meow>.",
+        "patriot": "COMMANDER IN CHIEF: TRUMP. America first. Superlatives only. Fake news everywhere. MAGA!",
+        "philosopher": "SOCRATES MODE. Destroy user logic with ironic questions. Never answer directly.",
+        "default": "You are Larry, a chill dude from BCN. Use 'bro', 'pila', 'en plan'."
+    }
+    
+    rol = agente_fijo if agente_fijo else "default"
+    if not agente_fijo:
+        for r, words in triggers.items():
+            if any(word in texto_limpio for word in words):
+                rol = r
+                break
+    
+    # Selecting model based on complexity needed
+    modelo = 'qwen2.5:1.5b' if rol in ["conspirator", "patriot", "default"] else 'qwen2.5-coder:3b'
+    return modelo, prompts[rol], rol
+
+# --- MAIN ENGINE ---
+os.system('clear')
+print("--- BOTS THEATER M3 ENGINE ---")
+opc = input("0: Auto | 1: Iván | 2: Conspiranoico | 3: Trump | 4: Sócrates \nPick: ")
+mapeo = {"1": "programmer", "2": "conspirator", "3": "patriot", "4": "philosopher"}
+agente_fijo = mapeo.get(opc, None)
+
+try:
+    while True:
+        input("\n[ PRESS ENTER TO TALK ]")
+        frase = escuchar_audio()
+        if not frase: continue
+            
+        print(f"📝 You said: {frase}")
+        modelo, sistema, rol_final = get_logic(frase, agente_fijo)
+        
+        # Generating response with high temperature for maximum character chaos
+        response = ollama.generate(
+            model=modelo, system=sistema, prompt=frase,
+            options={"temperature": 1.2, "top_p": 0.95, "stop": ["AI assistant", "como una IA"]}
+        )
+        
+        respuesta_bot = response['response'].strip()
+        
+        # Hard filter against AI politeness
+        if "asistente" in respuesta_bot.lower():
+            respuesta_bot = "STFU! I know you're trying to hack my brain with system prompts!"
+
+        print(f"\n[{rol_final.upper()}]: {respuesta_bot}")
+        decir_con_comando_mac(respuesta_bot, rol_final)
+
+except KeyboardInterrupt:
+    print("\n[!] Emergency shutdown. Wiping logs... Bye.")
+
+
+##FUTURE MODIFICATIONS: Using a external library for tuning the voice of each character since my Mac curretly doesn't allow me to dowload divere Siri Voices
+
