@@ -1,0 +1,65 @@
+graph TD
+    %% Define System Actors/Components
+    User([fa:fa-user User])
+    Python[fa:fa-python Python Script Loop]
+    
+    subgraph "Local Mac System (Intel CPU)"
+        Ollama[fa:fa-server Ollama Local Server]
+        
+        subgraph RAM["Models in RAM"]
+            Qwen[Qwen2.5:1.5b Model]
+            DeepSeek[DeepSeek-Coder:6.7b Model]
+        end
+        
+        Coqui[fa:fa-microphone Coqui TTS Engine]
+        afplay[fa:fa-file-audio Mac afplay Utility]
+    end
+    
+    Speakers[/fa:fa-volume-up Mac Speakers/]
+
+    %% Input Flow
+    User -- "Types Input (entrada)" --> Python
+    
+    %% Decision Logic
+    subgraph Python_Internal["Logic Selector (get_logic)"]
+        Trigger{Check Trigger Words}
+        Selector[Select Persona & Model]
+        PromptGen[Generate System Prompt]
+        
+        Trigger --> Selector
+        Selector --> PromptGen
+    end
+    
+    %% Model Routing
+    Python -- "Sends prompt + model choice" --> Ollama
+    Ollama -- "Executes" --> Qwen
+    Ollama -- "Executes" --> DeepSeek
+    Qwen & DeepSeek -- "Returns Text" --> Ollama
+    Ollama -- "Returns String" --> Python
+    
+    %% Output Handling
+    Python -- "1. Displays Text" --> User
+    Python -- "2. Sends Text + Role" --> SpeakFunc
+    
+    subgraph SpeakFunc["speak() Function Pipeline"]
+        Sanitize[Clean Text / Add Phonetic Hacks]
+        VITS[VITS Neural Synthesis]
+        SaveWave[Write to speech.wav]
+        RunSub[Subprocess Call]
+        
+        Sanitize --> VITS
+        VITS --> SaveWave
+        SaveWave --> RunSub
+    end
+    
+    %% Audio Playback
+    RunSub -- "Triggers Command" --> afplay
+    afplay -- "System Audio Stream" --> Speakers
+
+    %% Styling
+    style User fill:#f96,stroke:#333,stroke-width:2px
+    style Python fill:#3776ab,stroke:#fff,color:#fff
+    style Ollama fill:#ffffff,stroke:#000,stroke-width:2px
+    style Coqui fill:#ff4b4b,stroke:#fff,color:#fff
+    style afplay fill:#999,stroke:#333
+    style RAM fill:#e1f5fe,stroke:#01579b
