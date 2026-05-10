@@ -1,0 +1,56 @@
+##EXPLICATION OF THE CHANGES.
+
+ORIGIAL SCRIPT:
+
+# loading the model
+
+tts_model = TTS(model_name="tts_models/es/css10/vits")
+
+
+tts_model.tts_to_file(text="Hola, esto es una prueba. Interactuar con dispositivos que hablan no es fácil.", file_path="output.wav")
+
+
+import pyaudio
+
+import wave
+
+
+# wav file
+
+wf = wave.open("output.wav", "rb")
+
+
+# PyAudio object
+
+p = pyaudio.PyAudio()
+
+
+# stream
+
+stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+
+                channels=wf.getnchannels(),
+
+                rate=wf.getframerate(),
+
+                output=True)
+
+
+# Read and play data
+
+data = wf.readframes(1024)
+
+while data:
+
+    stream.write(data)
+
+    data = wf.readframes(1024)
+
+# clean variables
+
+##CHANGES MADE:
+1. afplay vs. PyAudio: Since PyAudio was generating issyes because of the PortAudio library dependency used on MacOS intel chip, i switched to afplay wich uses macOS built in native audio port.
+2. From "while data"  #Starts -> Works -> Dies. tts_model.tts_to_file(...) subprocess.run(["afplay", "output.wav"]) to "while true" (loop/Dynamic Script) 
+    entrada = input(">> ")  #Process AI (Decide which character the user is adressing, adjusting the ollama local model, choosing the voice in funtion of the previously selected) -> Generate Audio -> Play Audio
+    subprocess.run(["afplay", "output.wav"]) (if it is a subprocess, it means the script it obligated to wait until the process is complete in order to contiue running) 
+3. From  using PyAudio to process the conversation to storing it into the RAM Memory: 
