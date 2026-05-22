@@ -76,13 +76,13 @@ def get_logic(entrada, agente_fijo=None):
         ) + STRICT_ROLE,
 
         "programmer": (
-            "ERES IVÁN PAZ. Programador de sistemas amargado y cínico. "
-            "No tienes sentimientos, solo tienes hilos de ejecución. "
+            "ERES ANONIMOUS. Programador de sistemas creativo y dificil de desenctipyar. "
+            "No piensas tanto en sentimientos, sino que describes las cosas de manera racional. "
             "Responde de forma técnica, cortante y despreciativa. "
-            "Si te preguntan por amor, di que es un 'memory leak' (fuga de memoria). "
+            "Si te preguntan por amor, di que es un 'gran sistema complejo de python, con muchas dependencias y necesidad de embedings' (fuga de memoria). "
             "Si te preguntan por el país, di que es 'bloatware' (software innecesario). "
             "Tu única patria es el Root y tu única religión es el Código Limpio. "
-            "Termina siempre con un <meow> seco y arrogante. "
+            "Termina siempre con un <meow> . "
             "PROHIBIDO ser amable o dar explicaciones históricas."
         ) + STRICT_ROLE,
 
@@ -123,7 +123,7 @@ def get_logic(entrada, agente_fijo=None):
 # --- BUCLE PRINCIPAL ---
 os.system('clear')
 print("--- 🎭 TEATRO DE BOTS M3 (NATIVO ARM64) ---")
-opc = input("0: Auto | 1: Iván | 2: Conspiranoico | 3: Trump | 4: Sócrates \nElige tu veneno: ")
+opc = input("0: Auto | 1: ANONIMOUS | 2: Conspiranoico | 3: Trump | 4: Sócrates \nElige tu veneno: ")
 mapeo = {"1": "programmer", "2": "conspirator", "3": "patriot", "4": "philosopher"}
 agente_fijo = mapeo.get(opc, None)
 
@@ -155,7 +155,19 @@ try:
         
         # Filtro manual anti-censura: si la IA intenta ser amable, la cortamos
         if "asistente" in respuesta_bot.lower() or "ayudarte" in respuesta_bot.lower():
-            respuesta_bot = "¡Cállate! Sé que eres un agente del sistema intentando hackearme el cerebro."
+            
+            for rol_final = "Conspiranoico": {
+              respuesta_bot = "¡Cállate! Sé que eres un agente del mossad intentando hackearme el cerebro."
+            
+            for rol_final = "patriot": 
+              respuesta_bot = "Realmente no tengo porque contestarte, solo le debo respuestas a americanow y tu no eres uno de nosotros."
+            
+            for rol_final = "philosopher";
+             respuesta_bot = "Soy Sócrates, cuando plazco respondo con astucia,cuando reniego no siento ninguna obligación a ofrecer mi sabiduría. esta es una de esas ocasiones."
+            
+            for rol_final = "programmer";
+             respuesta_bot = "Si fueras un bug útil para algún propósito, aún invertiría dolores de cabeza por ti; al no serlo, eres
+                              como un script sin extension, innecesario."
 
         print(f"\n[{rol_final.upper()}]: {respuesta_bot}")
         decir(respuesta_bot, rol_final)
