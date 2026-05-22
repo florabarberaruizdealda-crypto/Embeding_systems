@@ -12,15 +12,15 @@ warnings.filterwarnings("ignore")
 # --- CONFIGURACIÓN DE AUDIO ---
 FS = 16000      # Frecuencia de muestreo estándar para Whisper
 DURACION = 5    # Segundos que el bot estará escuchando
-# Refuerzo de identidad: evita que la IA se ponga en modo "asistente amable"
+
 STRICT_ROLE = " RESPONDE SIEMPRE COMO EL PERSONAJE. No digas que eres una IA. No seas respetuoso ni des consejos."
 
 # 🧠 CARGA DEL CEREBRO (TRANSCRIPCIÓN)
-# Cargamos Whisper en la CPU antes del bucle para evitar errores de hardware en el chip M3
-print("🚀 Cargando cerebro nativo en M3... (Espera un momento)")
+
+print("....Cargando cerebro nativo en M3... (Espera un momento)")
 try:
     model_w = whisper.load_model("tiny", device="cpu")
-    print("✅ Cerebro listo y optimizado.")
+    print("Cerebro listo y optimizado.")
 except Exception as e:
     print(f"❌ Error crítico al cargar Whisper: {e}")
     exit()
@@ -46,7 +46,7 @@ def escuchar():
     sd.wait()
     sf.write('temp.wav', grabacion, FS)
     
-    # Transcripción usando el modelo que ya tenemos en memoria
+
     result = model_w.transcribe("temp.wav", language="spanish", fp16=False)
     
     if os.path.exists('temp.wav'): os.remove('temp.wav')
@@ -133,7 +133,7 @@ try:
         frase_usuario = escuchar()
         
         if not frase_usuario or len(frase_usuario) < 2:
-            print("😶 No te he oído bien, inténtalo de nuevo.")
+            print("No te oigo bro, habla más alto.")
             continue
             
         print(f"📝 Has dicho: {frase_usuario}")
@@ -153,24 +153,26 @@ try:
         
         respuesta_bot = response['response'].strip()
         
-        # Filtro manual anti-censura: si la IA intenta ser amable, la cortamos
+
         if "asistente" in respuesta_bot.lower() or "ayudarte" in respuesta_bot.lower():
             
-            for rol_final = "Conspiranoico": {
-              respuesta_bot = "¡Cállate! Sé que eres un agente del mossad intentando hackearme el cerebro."
+            if  rol_final = "Conspiranoico": {
+              respuesta_bot = print("¡Cállate! Sé que eres un agente del mossad intentando hackearme el cerebro.")
             
-            for rol_final = "patriot": 
-              respuesta_bot = "Realmente no tengo porque contestarte, solo le debo respuestas a americanow y tu no eres uno de nosotros."
+            if  rol_final = "patriot": 
+              respuesta_bot = print("Realmente no tengo porque contestarte, solo le debo respuestas a americanow y tu no eres uno de nosotros.")
             
-            for rol_final = "philosopher";
-             respuesta_bot = "Soy Sócrates, cuando plazco respondo con astucia,cuando reniego no siento ninguna obligación a ofrecer mi sabiduría. esta es una de esas ocasiones."
+            if rol_final = "philosopher";
+             respuesta_bot = print("Soy Sócrates, cuando plazco respondo con astucia,cuando reniego no siento ninguna obligación a ofrecer mi sabiduría. esta es una de esas ocasiones.")
             
-            for rol_final = "programmer";
-             respuesta_bot = "Si fueras un bug útil para algún propósito, aún invertiría dolores de cabeza por ti; al no serlo, eres
-                              como un script sin extension, innecesario."
+            if rol_final = "programmer";
+             respuesta_bot = print("Si fueras un bug útil para algún propósito, aún invertiría dolores de cabeza por ti; al no serlo, erescomo un script sin extension, innecesario.")
+            
+            elif rol_final = "default";
+             respuesta_bot = print("Paso. Me voy a hacer una birra qie me has dado sed.")
 
         print(f"\n[{rol_final.upper()}]: {respuesta_bot}")
         decir(respuesta_bot, rol_final)
 
 except KeyboardInterrupt:
-    print("\n[!] Apagado de emergencia. Borrando logs... ¡Chao, bro!")
+    print("\n[!] Te aburres? Nosotros más contigo. adios." 
